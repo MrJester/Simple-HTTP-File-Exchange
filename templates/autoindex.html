@@ -1,0 +1,52 @@
+{% extends '__autoindex__/autoindex.html' %}
+
+{% block meta %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css"
+        href="{{ url_for('static', filename='css/bootstrap.css') }}" />
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-success" role="alert">
+                <ul class=flashes>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+{% endblock %}
+
+{% block header %}
+    <table style="width:100%">
+    <col width="50%">
+        <tr>
+        <th>
+            <div align="left">
+                <h2>File Browser</h2>
+            </div>
+        </th>
+        <th>
+            <div style="float: right;">
+                <form class="form-inline" action="" method=post enctype=multipart/form-data>
+                    <div class="form-row align-items-center">
+                        <div class="col-auto">
+                            <label class="sr-only" for="inlineFormInput">Choose File</label>
+                            <input type=file class="form-control-file" name=file>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary mb-2">Upload</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </th>
+        </tr>
+    </table>
+
+{% endblock %}
+
+{% block footer %}
+
+{% endblock %}
