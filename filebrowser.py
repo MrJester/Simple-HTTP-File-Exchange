@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 
 import os
-
+import argparse
 from flask import Flask, request, redirect
 from flask_autoindex import AutoIndex
 from werkzeug import secure_filename
 
-UPLOAD_FOLDER = '/tmp/'
+parser = argparse.ArgumentParser()
+
+parser.add_argument("port", help="Port used to serve up content", default=8000, type=int)
+parser.add_argument("-f", "--folder", help="Folder to serve content from", default="/tmp/")
+
+args = parser.parse_args()
+
+UPLOAD_FOLDER = args.folder
 
 app = Flask(__name__, static_url_path=UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -25,4 +32,5 @@ def index(path):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5001)
+    print('Serving content from: %s' % args.folder)
+    app.run(host='0.0.0.0', port=args.port)
