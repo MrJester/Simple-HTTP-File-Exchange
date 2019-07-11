@@ -3,8 +3,8 @@ Simple HTTP file browser and uploader. Mostly used for easily exchanging files d
 
 
 # TODO
-1.) Add Arguments
+1.) <s>Add Arguments</s>
 
-2.) Change port with switch
+2.) <s>Change port with switch</s>
 
 3.) Authentication
