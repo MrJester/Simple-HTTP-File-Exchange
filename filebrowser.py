@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import os
+
 from flask import Flask, request, redirect
 from flask_autoindex import AutoIndex
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 parser = argparse.ArgumentParser()
 
