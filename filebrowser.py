@@ -89,7 +89,7 @@ def index(path):
 
 if __name__ == "__main__":
     print('Serving content from: %s' % args.folder)
-    if args.sll:
+    if args.ssl:
         app.run(host='0.0.0.0', port=args.port, ssl_context=context)
     else:
         app.run(host='0.0.0.0', port=args.port)
