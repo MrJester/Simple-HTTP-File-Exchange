@@ -20,8 +20,6 @@ parser.add_argument("--privkey", help="Sets the path for the Private Key", defau
 
 args = parser.parse_args()
 
-print(args.ssl)
-exit()
 UPLOAD_FOLDER = args.folder
 
 app = Flask(__name__, static_url_path=UPLOAD_FOLDER)
