@@ -7,23 +7,33 @@ import os
 from flask import Flask, flash, request, make_response
 from flask_autoindex import AutoIndex
 from werkzeug.utils import secure_filename
+import ssl
+
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-p", "--port", help="Port used to serve up content", default=8000, type=int)
 parser.add_argument("-f", "--folder", help="Folder to serve content from", default="/tmp/")
+parser.add_argument("--ssl", help="Enables SSL encryption for your server", default=False, action='store_true')
+parser.add_argument("--fullchain", help="Sets the path for the Full Chain certificate", default="fullchain.pem")
+parser.add_argument("--privkey", help="Sets the path for the Private Key", default="privkey.key")
 
 args = parser.parse_args()
 
+print(args.ssl)
+exit()
 UPLOAD_FOLDER = args.folder
 
 app = Flask(__name__, static_url_path=UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'
+if args.ssl:
+    context = ssl.SSLContext()
+    context.load_cert_chain(args.fullchain, args.privkey)
 
 AutoIndex(app, browse_root=app.config['UPLOAD_FOLDER'])
-logging.basicConfig(filename='filebrowser.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='filebrowser.log', level=logging.DEBUG)
 log = logging.getLogger('pydrop')
 
 
@@ -61,9 +71,9 @@ def index(path):
                 # This was the last chunk, the file should be complete and the size we expect
                 if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
                     flash(f"File {file.filename} was completed, "
-                              f"but has a size mismatch."
-                              f"Was {os.path.getsize(save_path)} but we"
-                              f" expected {request.form['dztotalfilesize']} ", "warning")
+                          f"but has a size mismatch."
+                          f"Was {os.path.getsize(save_path)} but we"
+                          f" expected {request.form['dztotalfilesize']} ", "warning")
                     log.error(f"File {file.filename} was completed, "
                               f"but has a size mismatch."
                               f"Was {os.path.getsize(save_path)} but we"
@@ -81,4 +91,7 @@ def index(path):
 
 if __name__ == "__main__":
     print('Serving content from: %s' % args.folder)
-    app.run(host='0.0.0.0', port=args.port)
+    if args.sll:
+        app.run(host='0.0.0.0', port=args.port, ssl_context=context)
+    else:
+        app.run(host='0.0.0.0', port=args.port)
