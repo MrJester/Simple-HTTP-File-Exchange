@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import sys
 
 from flask import Flask, flash, request, make_response
 from flask_autoindex import AutoIndex
@@ -18,21 +19,55 @@ parser.add_argument("--ssl", help="Enables SSL encryption for your server", defa
 parser.add_argument("--fullchain", help="Sets the path for the Full Chain certificate", default="fullchain.pem")
 parser.add_argument("--privkey", help="Sets the path for the Private Key", default="privkey.key")
 
+# Configure logging first so 'log' is available
+logging.basicConfig(filename='filebrowser.log', level=logging.DEBUG)
+log = logging.getLogger('pydrop')
+
 args = parser.parse_args()
 
-UPLOAD_FOLDER = args.folder
+# Validate port number
+if not 1 <= args.port <= 65535:
+    log.error(f"Error: Port number {args.port} is invalid. Must be between 1 and 65535.")
+    sys.exit(1)
+
+# Validate and set UPLOAD_FOLDER
+if not os.path.isabs(args.folder):
+    log.warning(
+        f"The provided path '{args.folder}' is not an absolute path. "
+        "Using relative paths for the upload folder is not recommended for security reasons. "
+        "An absolute path will be used, but please update your configuration."
+    )
+UPLOAD_FOLDER = os.path.abspath(args.folder)
+
+if not os.path.exists(UPLOAD_FOLDER):
+    log.error(
+        f"The specified upload folder '{UPLOAD_FOLDER}' does not exist. "
+        "Please create it or provide a valid path."
+    )
+    sys.exit(1)
+
+if not os.path.isdir(UPLOAD_FOLDER):
+    log.error(
+        f"The specified upload path '{UPLOAD_FOLDER}' is not a directory. "
+        "Please ensure the path points to a directory."
+    )
+    sys.exit(1)
 
 app = Flask(__name__, static_url_path=UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'super secret key'
+# Set the secret key
+flask_secret_key = os.environ.get('FLASK_SECRET_KEY')
+if flask_secret_key:
+    app.secret_key = flask_secret_key
+else:
+    app.secret_key = 'super secret key'
+    app.logger.warning('FLASK_SECRET_KEY is not set, using default secret key. This is not recommended for production.')
 app.config['SESSION_TYPE'] = 'filesystem'
 if args.ssl:
-    context = ssl.SSLContext()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.load_cert_chain(args.fullchain, args.privkey)
 
 AutoIndex(app, browse_root=app.config['UPLOAD_FOLDER'])
-logging.basicConfig(filename='filebrowser.log', level=logging.DEBUG)
-log = logging.getLogger('pydrop')
 
 
 @app.route("/", defaults={'path': ''}, methods=['GET', 'POST'])
@@ -41,7 +76,7 @@ def index(path):
     if request.method == 'POST':
         if request.files['file'].filename != '':
             file = request.files['file']
-            save_path = os.path.join(os.path.join(app.config['UPLOAD_FOLDER'], path), secure_filename(file.filename))
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], path, secure_filename(file.filename))
 
             current_chunk = int(request.form['dzchunkindex'])
 
